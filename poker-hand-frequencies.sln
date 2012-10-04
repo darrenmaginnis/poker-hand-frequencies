@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "poker-hand-frequencies", "poker-hand-frequencies\poker-hand-frequencies.vcxproj", "{FEDBD866-389A-4547-9A58-25B18F96DBBB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FEDBD866-389A-4547-9A58-25B18F96DBBB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FEDBD866-389A-4547-9A58-25B18F96DBBB}.Debug|Win32.Build.0 = Debug|Win32
+		{FEDBD866-389A-4547-9A58-25B18F96DBBB}.Release|Win32.ActiveCfg = Release|Win32
+		{FEDBD866-389A-4547-9A58-25B18F96DBBB}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
