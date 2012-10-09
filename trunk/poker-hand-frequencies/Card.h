@@ -5,10 +5,7 @@
 class Card
 {
 public:
-
-
 	enum Suit{ Spades = 0, Hearts, Diamonds, Clubs };
-
 	enum Rank { Two = 0, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace };
 
 
@@ -29,6 +26,9 @@ public:
 	// Description     : Card Destructor
 	// Argument        : void
 	~Card(void);
+
+	Suit GetSuit();
+	Rank GetRank();
 private:
 	Suit m_CardSuit;
 	Rank m_CardRank;
