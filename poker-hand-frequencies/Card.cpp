@@ -13,6 +13,14 @@ Card::Card(Suit s, Rank r)
 	m_CardSuit = s;
 }
 
+Card::Rank Card::GetRank(){
+	return m_CardRank;
+}
+
+Card::Suit Card::GetSuit(){
+	return m_CardSuit;
+}
+
 
 
 Card::~Card(void)
