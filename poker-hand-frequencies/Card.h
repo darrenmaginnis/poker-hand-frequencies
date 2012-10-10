@@ -38,14 +38,17 @@ public:
 	// Function name   : ~Card
 	// Description     : Card Destructor
 	// Argument        : void
-	~Card(void);
+	~Card(void)
+	{
+	
+	}
 
 
 	// Function name   : CreatDeck
 	// Description     : Creats a shuffled deck
 	// Return type     : static vector<Card> 
-	static vector<Card> CreatDeck(){
-		vector<Card> deck;
+	static std::vector<Card> CreatDeck(){
+		std::vector<Card> deck;
 		deck.reserve(52);
 		for(int s = 0; s < 4; ++s){ //Suit
 			for(int r = 0; r < 13; ++r){ //Rank
