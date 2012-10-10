@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <utility>
+#include <algorithm>
 
 class Card
 {
@@ -38,6 +39,22 @@ public:
 	// Description     : Card Destructor
 	// Argument        : void
 	~Card(void);
+
+
+	// Function name   : CreatDeck
+	// Description     : Creats a shuffled deck
+	// Return type     : static vector<Card> 
+	static vector<Card> CreatDeck(){
+		vector<Card> deck;
+		deck.reserve(52);
+		for(int s = 0; s < 4; ++s){ //Suit
+			for(int r = 0; r < 13; ++r){ //Rank
+				deck.push_back(Card(static_cast<Suit>(s),static_cast<Rank>(r)));
+			}
+		}
+		random_shuffle ( deck.begin(), deck.end() );
+		return deck;
+	}
 
 };
 
