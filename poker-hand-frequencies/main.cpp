@@ -67,13 +67,40 @@ Hands CheckHand(vector<Card> vecHand)
 }
 
 void processSlave(){
-	int frequency[10] = {0};
-	
-}
-
-void processMaster(){
 	bool found[10] = {false};
 	int frequency[10] = {0};
 
+	// set Pair, High_Card as found 
+	found[Pair] = true;
+	found[High_Card] = true;
+
+	//main loop
+	
 }
 
+void processMaster(){	
+	bool found[10] = {false};
+	int frequency[10] = {0};
+	
+	// set Pair, High_Card as found 
+	found[Pair] = true;
+	found[High_Card] = true;
+	bool stop = false;
+
+	//main loop
+	do{
+		vector<Card> deck = Card::CreatDeck();
+		
+
+		//check if all found
+		for(int i = 0; i < 10; ++i){
+			stop = found[i];
+			if(!found[i]){
+				break;
+			}
+		}
+	}while(!stop);
+
+
+
+}
