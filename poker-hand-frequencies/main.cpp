@@ -251,6 +251,7 @@ void processSlave(){
 }
 
 void processMaster(){	
+
 	bool found[10] = {false};
 	int frequency[10] = {0};
 	
@@ -270,6 +271,10 @@ void processMaster(){
 	static int rcv_buff, recvFlag;
 	MPI_Status status;
 	recv_Request = 0;
+	
+	//start the timer
+	clock_t timerStart = clock();
+
 	//main loop
 	do{ 
 		//listen asynchronously
@@ -322,7 +327,10 @@ void processMaster(){
 			}
 		}
 	}while(!stop);
-	
+	clock_t elapsed = clock() - timerStart;
+
+	cout << ((float)elapsed)/CLOCKS_PER_SEC << " seconds." << endl;
+
 	//shut down slaves
 	for(int i = 1; i < poolSize; ++i){
 		MPI_Isend(&i, 1, MPI_INT, i, TAG_KILL, MPI_COMM_WORLD, &send_Request);
