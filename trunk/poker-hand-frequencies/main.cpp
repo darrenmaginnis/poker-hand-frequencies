@@ -14,225 +14,239 @@
 #include<vector>
 #include <mpi.h>
 #include<cassert>
-#include "Card.h"
+#include <time.h>
 #include<iterator>
-#include<time.h>
+
+#include "Card.h"
+
 
 using namespace std;
 
-enum Hands { Royal_Flush = 0/*done*/, Straight_Flush /* done*/, Four_of_a_Kind/*done*/, Full_House/*done*/, Flush/*done*/, Straight/*done*/, Three_of_a_Kind/*done*/, Two_Pair/*done*/, Pair/*done*/, High_Card/*done*/ };
+enum Hands { Royal_Flush = 0, Straight_Flush, Four_of_a_Kind, Full_House, Flush, Straight, Three_of_a_Kind, Two_Pair, Pair, High_Card };
 int poolSize, instance;
 
 Hands CheckHand(vector<Card> vecHand);
 void processSlave();
 void processMaster();
+const int TAG_HAND = 0;
+const int TAG_KILL = 1;
 
 int main(int argc, char *argv[])
 {
+
+
 	//Initialize MPI
 	if( MPI_Init(&argc, &argv) == MPI_SUCCESS )
 	{
-		//Obtain the rank and size of the processes
+		//Obtain the instance and the poolsize
 		MPI_Comm_size(MPI_COMM_WORLD, &poolSize);
 		MPI_Comm_rank(MPI_COMM_WORLD, &instance);
+		
 		//seed the random
-		srand ( time(NULL) + instance );
-		vector<Card> deck = Card::CreatDeck();
-		vector<Card> hand;
-		for(int i = 0; i < 5; ++i){
-			hand.push_back(deck.back());
-			deck.pop_back();
-		}
-		  vector<Card> h;
-		  h.push_back(Card(Card::Clubs, Card::Three));
-		  h.push_back(Card(Card::Clubs, Card::Three));
-		  h.push_back(Card(Card::Hearts, Card::Four));
-		  h.push_back(Card(Card::Clubs, Card::Queen));
-		  h.push_back(Card(Card::Clubs, Card::Queen));
-
-		CheckHand(h);
+		srand ( static_cast<unsigned>(time(NULL))+ instance );
+		
+		// start 
 		if(instance == 0) 
 			processMaster();
 		else
 			processSlave();
 		
-	
+		//shutdown
 		return MPI_Finalize();
 	}
 	return EXIT_FAILURE;
 }
 
-Hands CheckHand(vector<Card> vecHand)
-{
+Hands CheckHand(vector<Card> vecHand){
 	assert(vecHand.size() == 5);
-	
-	//Royal Flush
-	bool isSameSuit = true;
+
+	bool isRoyal, isFlush, isStraight, isFour, isThree, isHouse, isTwoPair, isPair;
+	isRoyal = isFlush = isStraight = isFour = isThree = isHouse = isTwoPair = isPair = true;
+
+	//Flush
 	Card::Suit suit = vecHand[0].CardSuit;
 	sort(vecHand.begin(), vecHand.end());
 	//same suit
-	for(vector<Card>::iterator handIt = vecHand.begin(); handIt != vecHand.end(); handIt++)
-	{
-		if (handIt->CardSuit != suit)
-		{
-			isSameSuit = false;
+	for(vector<Card>::iterator handIt = vecHand.begin(); handIt != vecHand.end(); handIt++){
+		if (handIt->CardSuit != suit){
+			isFlush = false;
 			break;
 		}
 	}
 
-	//check Rank
-	int rank = static_cast<int>(vecHand.begin()->CardRank);
-	bool isStraight = true;
-	
-	for(vector<Card>::iterator handIt = vecHand.begin() + 1; handIt != vecHand.end(); handIt++)
-	{
+	//Straight
+	int rank = static_cast<int>(vecHand.begin()->CardRank);	
+	for(vector<Card>::iterator handIt = vecHand.begin() + 1; handIt != vecHand.end(); handIt++){
 		int current = static_cast<int>(handIt->CardRank);
-		if (current != ++rank)
-		{
+		if (current != ++rank){
 			isStraight = false;
 			break;
+		}		
+	}
+	
+	//Royal Flush or Straight Flush
+	if(isFlush && isStraight){
+		if(vecHand[0].CardRank == Card::Ten){
+			return Royal_Flush;
 		}
-		
+		else{
+			return Straight_Flush;
+		}
 	}
 
 	//Four of a Kind
 	Card::Rank cardRank = vecHand.begin()->CardRank;
-	bool isFour = true;
-	for(int i = 1 ; i < 4; i++)
-	{
-
-		if ( vecHand[i].CardRank != cardRank)
-		{
+	for(int i = 1 ; i < 4; i++){
+		if ( vecHand[i].CardRank != cardRank){
 			isFour = false;
 			break;
-		}
-		
+		}		
 	}
-
-	if (!isFour)
-	{
+	if (!isFour){
 		cardRank = vecHand.rbegin()->CardRank;
 		isFour = true;
-		for(int i = 3 ; i > 0; i--)
-		{
-
-			if ( vecHand[i].CardRank != cardRank)
-			{
+		for(int i = 3 ; i > 0; i--){
+			if ( vecHand[i].CardRank != cardRank){
 				isFour = false;
 				break;
-			}
-		
-		}
-	
+			}		
+		}	
+	}
+
+	if(isFour){
+		return Four_of_a_Kind;
+	}
+	if(isFlush){
+		return Flush;
+	}
+	if(isStraight){
+		return Straight;
 	}
 
 	//Three of a Kind
 	cardRank = vecHand.begin()->CardRank;
-	bool isThree = true;
-	for(int i = 1 ; i < 3; i++)
-	{
-
-		if ( vecHand[i].CardRank != cardRank)
-		{
+	for(int i = 1 ; i < 3; i++){
+		if ( vecHand[i].CardRank != cardRank){
 			isThree = false;
 			break;
 		}
 	}
 
-	if (!isThree)
-	{
+	if (!isThree){
 		cardRank = vecHand.rbegin()->CardRank;
 		isThree = true;
-		for(int i = 3 ; i > 1; i--)
-		{
-
-			if ( vecHand[i].CardRank != cardRank)
-			{
+		for(int i = 3 ; i > 1; i--) {
+			if ( vecHand[i].CardRank != cardRank) {
 				isThree = false;
 				break;
-			}
-		
-		}
-	
-	}
-
-	//Two Pair
-	bool isTwoPair = false;
-	for(int i = 0 ; i < 4; i++)
-	{
-
-		if ( vecHand[0].CardRank == vecHand[1].CardRank && vecHand[3].CardRank == vecHand[4].CardRank)
-		{
-			isTwoPair = true;
-			break;
-		}
-
-		if ( vecHand[0].CardRank == vecHand[1].CardRank && vecHand[2].CardRank == vecHand[3].CardRank)
-		{
-			isTwoPair = true;
-			break;
-		}
-
-		if ( vecHand[1].CardRank == vecHand[2].CardRank && vecHand[3].CardRank == vecHand[4].CardRank)
-		{
-			isTwoPair = true;
-			break;
-		}
-
-	}
-
-	//Pair
-	bool isTwo = false;
-	for(vector<Card>::iterator handIt = vecHand.begin(); handIt != vecHand.end(); handIt++)
-	{	
-		if (handIt + 1 != vecHand.end() && *handIt == *(handIt + 1))
-		{
-			isTwo = true;
-			break;
+			}		
 		}	
 	}
 
-	if(isStraight && isSameSuit)
-	{
-		if(vecHand[0].CardRank == Card::Ten)
-			return Royal_Flush;
-		else
-			return Straight_Flush;
+	//Full House
+	if(isThree){
+		if(vecHand[0].CardRank != vecHand[2].CardRank){
+			if(vecHand[0].CardRank == vecHand[1].CardRank){
+				return Full_House;
+			}
+		}else{
+			if(vecHand[3].CardRank == vecHand[4].CardRank){
+				return Full_House;
+			}
+		}
+		return Three_of_a_Kind;
 	}
 
-	else if (isFour)
-		return Four_of_a_Kind;
+	//Two Pair
+	if ( (vecHand[0].CardRank == vecHand[1].CardRank && vecHand[3].CardRank == vecHand[4].CardRank) ||
+		 (vecHand[0].CardRank == vecHand[1].CardRank && vecHand[2].CardRank == vecHand[3].CardRank) ||
+		 (vecHand[1].CardRank == vecHand[2].CardRank && vecHand[3].CardRank == vecHand[4].CardRank) ){
+		 return Two_Pair;
+	}
 
-	else if (isThree && isTwo)
-		return Full_House;
 
-	else if(isSameSuit)
-		return Flush;
+	//Pair
+	for(vector<Card>::iterator handIt = vecHand.begin(); handIt != vecHand.end(); handIt++)
+	{	
+		if (handIt + 1 != vecHand.end() && handIt->CardRank == (handIt + 1)->CardRank)
+		{
+			return Pair;
+		}	
+	}
 
-	else if(isStraight)
-		return Straight;
-
-	else if(isThree)
-		return Three_of_a_Kind;
-
-	else if(isTwoPair)
-		return Two_Pair;
-
-	else if(isTwo)
-		return Pair;
-
+	//Default High Card
 	return High_Card;
 }
 
 void processSlave(){
 	bool found[10] = {false};
 	int frequency[10] = {0};
-
+	
 	// set Pair, High_Card as found 
 	found[Pair] = true;
 	found[High_Card] = true;
+	bool stop = false;
 
+	//Fill the deck;
+	vector<Card> deck = Card::CreatDeck();
+	assert(deck.size() == 52);
+	//generate hand.
+	vector<Card> hand;
+	hand.reserve(5);
+
+	MPI_Request send_Request, recv_Request;	
+	static int rcv_buff, recvFlag;
+	MPI_Status status;
+	recv_Request = 0;
 	//main loop
+	do{ 
+		random_shuffle ( deck.begin(), deck.end() );
+		//draw the hand
+		for(int i = 0; i < 5; ++i){
+			hand.push_back(deck[i]);
+		}
+		
+		//Check hand
+		Hands result = CheckHand(hand);
+		frequency[result]++;
+		if(!found[result]){
+			found[result] = true;
+			//TODO: tell others
+			for(int i = 0; i < poolSize; ++i)
+			{
+				if(i == instance){ // dont send to self
+					continue;
+				}
+				int r = static_cast<int>(result);
+				MPI_Isend(&r, 1, MPI_INT, i, TAG_HAND, MPI_COMM_WORLD, &send_Request);
+			}
+		}
+		hand.clear();
+		
+		//listen asynchronously
+		if( recv_Request )
+		{
+			// Already listening for a message Test to see if message has been received
+			MPI_Test( &recv_Request, &recvFlag, &status );
+			if( recvFlag )
+			{
+				// Message received hand found
+				if( status.MPI_TAG == TAG_HAND ){
+					found[rcv_buff] = true;
+				} else if(status.MPI_TAG == TAG_KILL){
+					stop = true;
+				}
+				// Reset the request handle
+				recv_Request = 0;
+			}
+		}
+		// Start listening again
+		if( !recv_Request && !stop ){
+			MPI_Irecv(&rcv_buff, 1, MPI_INT,MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &recv_Request);
+		}
+	}while(!stop);
+	//Send the Results
+	MPI_Send(&frequency, 10, MPI_INT, 0, TAG_KILL, MPI_COMM_WORLD);
 	
 }
 
@@ -245,20 +259,87 @@ void processMaster(){
 	found[High_Card] = true;
 	bool stop = false;
 
+	//Fill the deck;
+	vector<Card> deck = Card::CreatDeck();
+	assert(deck.size() == 52);
+	//generate hand.
+	vector<Card> hand;
+	hand.reserve(5);
+
+	MPI_Request send_Request, recv_Request;	
+	static int rcv_buff, recvFlag;
+	MPI_Status status;
+	recv_Request = 0;
 	//main loop
-	do{
-		vector<Card> deck = Card::CreatDeck();
+	do{ 
+		//listen asynchronously
+		if( recv_Request )
+		{
+			// Already listening for a message Test to see if message has been received
+			MPI_Test( &recv_Request, &recvFlag, &status );
+			if( recvFlag )
+			{
+				// Message received hand found
+				if( status.MPI_TAG == TAG_HAND ){
+					found[rcv_buff] = true;
+				}
+				// Reset the request handle
+				recv_Request = 0;
+			}
+		}
+		// Start listening again
+		if( !recv_Request ){
+			MPI_Irecv(&rcv_buff, 1, MPI_INT,MPI_ANY_SOURCE, TAG_HAND, MPI_COMM_WORLD, &recv_Request);
+		}
+		random_shuffle ( deck.begin(), deck.end() );
+		//draw the hand
+		for(int i = 0; i < 5; ++i){
+			hand.push_back(deck[i]);
+		}
 		
+		//Check hand
+		Hands result = CheckHand(hand);
+		frequency[result]++;
+		if(!found[result]){
+			found[result] = true;
+			//TODO: tell others			
+			for(int i = 0; i < poolSize; ++i)
+			{
+				if(i == instance){ // dont send to self
+					continue;
+				}
+				int r = static_cast<int>(result);
+				MPI_Isend(&r, 1, MPI_INT, i, TAG_HAND, MPI_COMM_WORLD, &send_Request);
+			}
+		}
+		hand.clear();
 
 		//check if all found
 		for(int i = 0; i < 10; ++i){
 			stop = found[i];
-			if(!found[i]){
+			if(!stop){
 				break;
 			}
 		}
 	}while(!stop);
+	
+	//shut down slaves
+	for(int i = 1; i < poolSize; ++i){
+		MPI_Isend(&i, 1, MPI_INT, i, TAG_KILL, MPI_COMM_WORLD, &send_Request);
+	}
+	
+	//collect totals
+	MPI_Status results;
+	for(int i = 1; i < poolSize; ++i){
+		int slaveResults[10] = {0};		
+		MPI_Recv(&slaveResults, 10, MPI_INT, i, TAG_KILL, MPI_COMM_WORLD,  &results);
+		for(int idx = 0; idx < 10; ++idx){
+			frequency[idx] += slaveResults[idx];
+		}
+	}
 
-
-
+	//TODO: Display
+	for(int i = 0; i < 10; ++i){
+		cout << i << " " << frequency[i] << endl;
+	}
 }

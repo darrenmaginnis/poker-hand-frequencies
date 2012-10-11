@@ -38,10 +38,7 @@ public:
 	// Function name   : ~Card
 	// Description     : Card Destructor
 	// Argument        : void
-	~Card(void)
-	{
-	
-	}
+	~Card(void){}
 
 
 	// Function name   : CreatDeck
@@ -55,10 +52,8 @@ public:
 				deck.push_back(Card(static_cast<Suit>(s),static_cast<Rank>(r)));
 			}
 		}
-		random_shuffle ( deck.begin(), deck.end() );
 		return deck;
 	}
-
 };
 
 bool operator < (Card const& lhs, Card const& rhs ){
