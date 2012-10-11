@@ -329,8 +329,6 @@ void processMaster(){
 	}while(!stop);
 	clock_t elapsed = clock() - timerStart;
 
-	cout << ((float)elapsed)/CLOCKS_PER_SEC << " seconds." << endl;
-
 	//shut down slaves
 	for(int i = 1; i < poolSize; ++i){
 		MPI_Isend(&i, 1, MPI_INT, i, TAG_KILL, MPI_COMM_WORLD, &send_Request);
@@ -346,8 +344,24 @@ void processMaster(){
 		}
 	}
 
-	//TODO: Display
+	//Display results
+	int totalHands = 0;
 	for(int i = 0; i < 10; ++i){
-		cout << i << " " << frequency[i] << endl;
+		totalHands += frequency[i];
 	}
+
+	cout << "Hand Type\t\tFrequency\t\tRelative Frequency (%)\n"
+		 << "=======================================================================\n"
+		 << "Royal Flush\t\t" << frequency[0] << "\t\t\t" << ((float)frequency[0])/totalHands*100 << "\n"
+		 << "Straight_Flush\t\t" << frequency[1] << "\t\t\t" << ((float)frequency[1])/totalHands*100 << "\n"
+		 << "Four_of_a_Kind\t\t" << frequency[2] << "\t\t\t" << ((float)frequency[2])/totalHands*100 << "\n"
+		 << "Full_House\t\t" << frequency[3] << "\t\t\t" << ((float)frequency[3])/totalHands*100 << "\n"
+		 << "Flush\t\t\t" << frequency[4] << "\t\t\t" << ((float)frequency[4])/totalHands*100 << "\n"
+		 << "Straight\t\t" << frequency[5] << "\t\t\t" << ((float)frequency[5])/totalHands*100 << "\n"
+		 << "Three_of_a_Kind\t\t" << frequency[6] << "\t\t\t" << ((float)frequency[6])/totalHands*100 << "\n"
+		 << "Two_Pair\t\t" << frequency[7] << "\t\t\t" << ((float)frequency[7])/totalHands*100 << "\n"
+		 << "Pair\t\t\t" << frequency[8] << "\t\t\t" << ((float)frequency[8])/totalHands*100 << "\n"
+		 << "High_Card\t\t" << frequency[9] << "\t\t\t" << ((float)frequency[9])/totalHands*100 << "\n\n"
+		 << "Total hands generated: " << totalHands << "\n"
+		 << "Completed in: "<< ((float)elapsed)/CLOCKS_PER_SEC << " seconds. Using " << poolSize << " processes." << endl;
 }
